@@ -1,6 +1,7 @@
 import subprocess
 import datetime
 import os
+import argparse
 
 # Define the command to run
 command = "python3 main.py --dataset animalkingdom --model timesformerclipinitvideoguide --gpu 0 --animal "
@@ -19,6 +20,11 @@ output_dir = f"Output/{date_string}"
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
+# Argument parsing
+parser = argparse.ArgumentParser()
+parser.add_argument('--parallel', type=bool, default=False, help='Whether to run processes in parallel or not')
+args = parser.parse_args()
+
 # For each animal csv
 files = os.listdir(directory)
     
@@ -32,18 +38,29 @@ for file_name in files:
         output_file_path = f"{output_dir}/{name}.txt"
 
         # Start the subprocess and redirect stdout and stderr to PIPE
-        process = subprocess.Popen(command + name, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        processes.append((process, output_file_path))
+        if args.parallel:
+            process = subprocess.Popen(command + name, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            processes.append((process, output_file_path))
+        else:
+            # Run each command sequentially
+            subprocess.run(command + name, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            # Write output to file
+            with open(output_file_path, "w") as file:
+                stdout, stderr = process.communicate()
+                file.write("Standard Output:\n")
+                file.write(stdout)
+                file.write("\nStandard Error:\n")
+                file.write(stderr)
 
-        
 # Wait for all subprocesses to finish and write their output to files
-for process, output_file_path in processes:
-    stdout, stderr = process.communicate()
-    with open(output_file_path, "w") as file:
-        file.write("Standard Output:\n")
-        file.write(stdout)
-        file.write("\nStandard Error:\n")
-        file.write(stderr)
+if args.parallel:
+    for process, output_file_path in processes:
+        stdout, stderr = process.communicate()
+        with open(output_file_path, "w") as file:
+            file.write("Standard Output:\n")
+            file.write(stdout)
+            file.write("\nStandard Error:\n")
+            file.write(stderr)
 
 # All processes have finished
 print("Split Main has finished!")
