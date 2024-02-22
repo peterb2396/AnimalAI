@@ -1,7 +1,7 @@
 import subprocess
 import datetime
 
-command = "python3 main.py --dataset animalkingdom --model timesformerclipinitvideoguide"
+command = "python3 main.py --dataset animalkingdom --model timesformerclipinitvideoguide --gpu 0"
 
 process = subprocess.run(command, shell=True, capture_output=True, text=True)
 

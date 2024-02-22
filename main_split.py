@@ -3,7 +3,7 @@ import datetime
 import os
 
 # Define the command to run
-command = "python3 main.py --dataset animalkingdom --model timesformerclipinitvideoguide --animal "
+command = "python3 main.py --dataset animalkingdom --model timesformerclipinitvideoguide --gpu 0 --animal "
 
 # Create a list to hold subprocesses
 processes = []

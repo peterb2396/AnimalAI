@@ -128,7 +128,7 @@ def main(args):
         executor = AdaptFormerCLIPInitExecutor(*model_args)
 
     executor.train(args.epoch_start, args.epochs)
-    executor.save(filePath="./checkpoint_"+args.animal+".pth" if args.animal else "./checkpoint.pth")
+    executor.save(file_path="./checkpoint_"+args.animal+".pth" if args.animal else "./checkpoint.pth")
     eval = executor.test()
     print("[INFO] " + eval_metric_string + ": {:.2f}".format(eval * 100), flush=True)
 
