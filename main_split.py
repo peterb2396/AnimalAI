@@ -34,6 +34,7 @@ for file_name in files:
     name = file_name.split('.')[0]
     
     if '.ipynb' not in name:
+        print("Starting model on "+name+"...")
         
         output_file_path = f"{output_dir}/{name}.txt"
 
@@ -43,14 +44,18 @@ for file_name in files:
             processes.append((process, output_file_path))
         else:
             # Run each command sequentially
-            subprocess.run(command + name, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            process = subprocess.run(command + name, shell=True, capture_output=True, text=True)
             # Write output to file
             with open(output_file_path, "w") as file:
-                stdout, stderr = process.communicate()
+                stdout = process.stdout
+                stderr = process.stderr
+                
+                print(name+" model has finished.")
                 file.write("Standard Output:\n")
                 file.write(stdout)
                 file.write("\nStandard Error:\n")
                 file.write(stderr)
+
 
 # Wait for all subprocesses to finish and write their output to files
 if args.parallel:
