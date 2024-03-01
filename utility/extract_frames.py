@@ -19,7 +19,13 @@ def video_to_frames(input_loc, output_loc):
     # Log the time
     time_start = time.time()
     # Start capturing the feed
-    cap = cv2.VideoCapture(input_loc)
+    print("file exists?", os.path.exists('input.mp4'))
+    root='AnimalAI'
+    fp = os.path.join(root,input_loc)
+    #print(fp)
+    cap = cv2.VideoCapture('input.mp4') #was input_loc
+    if (cap.isOpened()== False): 
+        print("Error opening video file ") 
     # Find the number of frames
     video_length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     print ("Number of frames: ", video_length)
