@@ -123,15 +123,15 @@ class TimeSformerCLIPInitVideoGuideExecutor:
         linear1_state_dict = self.model.linear1.state_dict()
         linear2_state_dict = self.model.linear2.state_dict()
         transformer_state_dict = self.model.transformer.state_dict()
-        query_embed_state_dict = self.model.query_embed.state_dict()
-        group_linear_state_dict = self.model.fc.state_dict()
+#         query_embed_state_dict = self.model.query_embed.state_dict()
+#         group_linear_state_dict = self.model.fc.state_dict()
         optimizer_state_dict = self.optimizer.state_dict()
         torch.save({"backbone": backbone_state_dict,
                     "linear1": linear1_state_dict,
                     "linear2": linear2_state_dict,
                     "transformer": transformer_state_dict,
-                    "query_embed": query_embed_state_dict,
-                    "group_linear": group_linear_state_dict,
+#                     "query_embed": query_embed_state_dict,
+#                     "group_linear": group_linear_state_dict,
                     "optimizer": optimizer_state_dict},
                     file_path)
 
@@ -141,8 +141,8 @@ class TimeSformerCLIPInitVideoGuideExecutor:
         self.model.linear1.load_state_dict(checkpoint["linear1"])
         self.model.linear2.load_state_dict(checkpoint["linear2"])
         self.model.transformer.load_state_dict(checkpoint["transformer"])
-        self.model.query_embed.load_state_dict(checkpoint["query_embed"])
-        self.model.group_linear.load_state_dict(checkpoint["group_linear"])
+#         self.model.query_embed.load_state_dict(checkpoint["query_embed"])
+#         self.model.group_linear.load_state_dict(checkpoint["group_linear"])
         self.optimizer.load_state_dict(checkpoint["optimizer"])
 
 
