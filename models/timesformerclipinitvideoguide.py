@@ -14,6 +14,16 @@ class TimeSformerCLIPInitVideoGuide(nn.Module):
     def __init__(self, class_embed, num_frames):
         super().__init__()
         self.num_classes, self.embed_dim = class_embed.shape
+#         try:
+#             self.num_classes, self.embed_dim = class_embed.shape
+#         except (ValueError):
+#             print("test")
+#             print(class_embed.shape)
+#             # unable to unpack tuple
+#             tuple_length = len(class_embed.shape)
+#             raise RuntimeError('''Invalid argument `class_embed`!
+#                 Corrupted class_embed has ({}) length!'''.format(tuple_length))
+
         self.backbone = TimesformerModel.from_pretrained("facebook/timesformer-base-finetuned-k400", num_frames=num_frames, ignore_mismatched_sizes=True)
         self.linear1 = nn.Linear(in_features=self.backbone.config.hidden_size, out_features=self.embed_dim, bias=False)
         self.pos_encod = PositionalEncoding(d_model=self.embed_dim)
@@ -24,6 +34,7 @@ class TimeSformerCLIPInitVideoGuide(nn.Module):
         self.group_linear = GroupWiseLinear(self.num_classes, self.embed_dim, bias=True)
 
     def forward(self, images):
+        print(type(images))
         b, t, c, h, w = images.size()
         x = self.backbone(images)[0]
         x = self.linear1(F.adaptive_avg_pool1d(x.transpose(1, 2), t).transpose(1, 2))
@@ -33,7 +44,7 @@ class TimeSformerCLIPInitVideoGuide(nn.Module):
         hs = self.transformer(x, query_embed) # b, t, d
         out = self.group_linear(hs)
         return out
-    
+
 
 class TimeSformerCLIPInitVideoGuideExecutor:
     def __init__(self, train_loader, test_loader, criterion, eval_metric, class_list, test_every, distributed, gpu_id) -> None:
@@ -49,6 +60,9 @@ class TimeSformerCLIPInitVideoGuideExecutor:
         num_frames = self.train_loader.dataset[0][0].shape[0]
         logging.set_verbosity_error()
         class_embed = self._get_text_features(class_list)
+
+#         print("TRY")
+#         print(class_embed)
         model = TimeSformerCLIPInitVideoGuide(class_embed, num_frames).to(gpu_id)
         if distributed: 
             self.model = DDP(model, device_ids=[gpu_id])
@@ -118,32 +132,53 @@ class TimeSformerCLIPInitVideoGuideExecutor:
             eval_meter.update(eval_this.item(), data.shape[0])
         return eval_meter.avg
     
+    def predict(self,images, checkpoint_path):
+        print("Here")
+        # Ensure the model is in evaluation mode
+        self.load(checkpoint_path)
+        self.model.eval()
+
+        
+        # No gradient computation needed
+        with torch.no_grad():
+            # Forward pass through the model
+            output = self.model(images)
+        
+
+        output = torch.softmax(output, dim=1)
+        print("YES", output)
+        return output
+    
     def save(self, file_path="./checkpoint.pth"):
         backbone_state_dict = self.model.backbone.state_dict()
         linear1_state_dict = self.model.linear1.state_dict()
         linear2_state_dict = self.model.linear2.state_dict()
         transformer_state_dict = self.model.transformer.state_dict()
-#         query_embed_state_dict = self.model.query_embed.state_dict()
-#         group_linear_state_dict = self.model.fc.state_dict()
+        #query_embed_state_dict = self.model.query_embed.state_dict()
+        #group_linear_state_dict = self.model.fc.state_dict()
         optimizer_state_dict = self.optimizer.state_dict()
         torch.save({"backbone": backbone_state_dict,
                     "linear1": linear1_state_dict,
                     "linear2": linear2_state_dict,
                     "transformer": transformer_state_dict,
-#                     "query_embed": query_embed_state_dict,
-#                     "group_linear": group_linear_state_dict,
+                    #"query_embed": query_embed_state_dict,
+                    #"group_linear": group_linear_state_dict,
                     "optimizer": optimizer_state_dict},
                     file_path)
-
+    
+    
     def load(self, file_path):
         checkpoint = torch.load(file_path)
         self.model.backbone.load_state_dict(checkpoint["backbone"])
         self.model.linear1.load_state_dict(checkpoint["linear1"])
         self.model.linear2.load_state_dict(checkpoint["linear2"])
         self.model.transformer.load_state_dict(checkpoint["transformer"])
-#         self.model.query_embed.load_state_dict(checkpoint["query_embed"])
-#         self.model.group_linear.load_state_dict(checkpoint["group_linear"])
+        #self.model.query_embed.load_state_dict(checkpoint["query_embed"])
+        #self.model.group_linear.load_state_dict(checkpoint["group_linear"])
         self.optimizer.load_state_dict(checkpoint["optimizer"])
+
+
+
 
 
 class PositionalEncoding(nn.Module):

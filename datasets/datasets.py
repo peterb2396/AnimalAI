@@ -63,22 +63,26 @@ class AnimalKingdom(ActionDataset):
         self.random_shift = random_shift
         self.mode = mode
         
-        # Dataset path varies based on if we are training based on a certain animal
-        if (animal):
-#             Custom anno path, use pre generated specific csv files
-            self.anno_path = os.path.join(self.path, 'action_recognition', 'annotation', mode+'_splits', animal + '.csv')
+        if mode=='predict':
+            print('predicting')
         else:
+        # Dataset path varies based on if we are training based on a certain animal
+            if (animal):
+#             Custom anno path, use pre generated specific csv files
+                self.anno_path = os.path.join(self.path, 'action_recognition', 'annotation', mode+'_splits', animal + '.csv')
+            else:
 #             Default anno path, uses train_light
-            self.anno_path = os.path.join(self.path, 'action_recognition', 'annotation', mode + '_light.csv')
+                self.anno_path = os.path.join(self.path, 'action_recognition', 'annotation', mode + '_light.csv')
         
     
         self.act_dict = act_dict
         self.num_classes = len(act_dict)
-        try:
-            self.video_list, self.file_list = self._parse_annotations()
-        except OSError:
-            print('ERROR: Could not read annotation file "{}"'.format(self.anno_path))
-            raise
+        if mode!='predict':
+            try:
+                self.video_list, self.file_list = self._parse_annotations()
+            except OSError:
+                print('ERROR: Could not read annotation file "{}"'.format(self.anno_path))
+                raise
 
     def _parse_annotations(self):
         video_list = []
